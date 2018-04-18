@@ -1,4 +1,12 @@
-var queryURL = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/significant_month.geojson"
+var queryURL = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson"
+
+var color0 = "limegreen";
+var color1 = "chartreuse";
+var color2 = "yellow";
+var color3 = "orange";
+var color4 = "darkorange";
+var color5 = "red";
+var legend = L.control();
 
 d3.json(queryURL, function(data) {
     createFeatures(data.features);
@@ -13,13 +21,36 @@ function createFeatures(earthquakeData) {
       "</h3><hr><p>" + new Date(feature.properties.time) + "</p>");
     }
 
+    function getGeoJsonMarkerOptions(feature) {
+        color = color5;
+        if (feature.properties.mag <= 1) {
+            color = color1;
+        } else if (feature.properties.mag <= 2) {
+            color = color2;
+        } else if (feature.properties.mag <= 3) {
+            color = color3;
+        } else if (feature.properties.mag <= 4) {
+            color = color4;
+        }
+
+        return {
+            radius: feature.properties.mag * 5,
+            fillColor: color,
+            color: "#000",
+            weight: 1,
+            opacity: 1,
+            fillOpacity: 0.8
+        };
+    }
+
     // Create a GeoJSON layer containing the features array on the earthquakeData object
     // Run the handleFeature function once for each piece of data in the array
     var earthquakes = L.geoJSON(earthquakeData, {
+        pointToLayer: function (feature, latlng) {
+            return L.circleMarker(latlng, getGeoJsonMarkerOptions(feature));
+        },  
         onEachFeature: handleFeature
     });
-    // Create a layer with all earthquake data
-    var earthquakes = L.geoJSON(earthquakeData);
 
     // Sending our earthquakes layer to the createMap function
     createMap(earthquakes);
@@ -50,6 +81,8 @@ function createMap(earthquakes) {
         layers: [darkmap, earthquakes]
     });
 
+    var legend = L.control({position: 'bottomright'});
+
     // Create a layer control
     // Pass in our baseMaps and overlayMaps
     // Add the layer control to the map
@@ -57,4 +90,20 @@ function createMap(earthquakes) {
         .layers(baseMaps, overlayMaps, {
             collapsed: false
         }).addTo(myMap);
+    
+    legend.onAdd = function (map) {
+        var div = L.DomUtil.create('div', 'info legend'),
+            grades = [color0, color1, color2, color3, color4, color5],
+            labels = ["0-1", "1-2","2-3", "3-4", "4-5", "5+"]
+        
+            // loop through our density intervals and generate a label with a colored square for each interval
+        for (var i = 0; i < grades.length; i++) {
+            div.innerHTML +=
+                '<i style="background:' + grades[i] + '"></i> ' + labels[i] + '<br>';
+        }
+        
+        return div;
+    };
+        
+    legend.addTo(myMap);    
 }
