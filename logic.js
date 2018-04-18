@@ -1,4 +1,5 @@
-var queryURL = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson"
+var queryURLquakes = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson"
+var queryURLplates = "https://raw.githubusercontent.com/fraxen/tectonicplates/master/GeoJSON/PB2002_plates.json"
 
 var color0 = "limegreen";
 var color1 = "chartreuse";
@@ -8,7 +9,7 @@ var color4 = "darkorange";
 var color5 = "red";
 var legend = L.control();
 
-d3.json(queryURL, function(data) {
+d3.json(queryURLquakes, function(data) {
     createFeatures(data.features);
 });
 
@@ -56,29 +57,65 @@ function createFeatures(earthquakeData) {
     createMap(earthquakes);
 }
 
-function createMap(earthquakes) {
+d3.json(queryURLplates, function(data) {
+    var plates = L.geoJSON(data, {
+        style: function (feature) {
+            var latlngs = (feature.geometry.coordinates);
+            return L.polyline(latlngs, {color: 'red'}).addTo(map);
+        }
+    })
+    createMap(plates);
+});
 
-    // Define streetmap and darkmap layers
+// d3.json(queryURLplates, function(data) {
+//     addPlates(data.features);
+// });
+
+// function addPlates(plateData) {
+
+//     var latlngs = (features.geometry.coordinates);
+//     var polyline = L.polyline(latlngs, {color: 'red'}).addTo(map);
+
+//     var plates = L.geoJSON(plateData, {
+//         style: function (feature, latlngs) {
+//             return L.polyline(latlngs, polyline(feature));
+//         }  
+//     });    
+
+//     // Sending our plates layer to the createMap function
+//     createMap(plates);
+// }
+
+function createMap(earthquakes, plates) {
+
+    // Define basemap layers
     var streetmap = L.tileLayer("https://api.mapbox.com/styles/v1/mapbox/streets-v9/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoibGl0dGxlc3Rkb2xsIiwiYSI6ImNqZHdnbTBzYTQ3bXUyeG80ZTQ3dWJtNjIifQ.uvSL6xgyBBXQSJ1Yopx9gA");
 
     var darkmap = L.tileLayer("https://api.mapbox.com/styles/v1/mapbox/dark-v9/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoibGl0dGxlc3Rkb2xsIiwiYSI6ImNqZHdnbTBzYTQ3bXUyeG80ZTQ3dWJtNjIifQ.uvSL6xgyBBXQSJ1Yopx9gA");
 
+    var lightmap = L.tileLayer("https://api.mapbox.com/styles/v1/mapbox/light-v9/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoibGl0dGxlc3Rkb2xsIiwiYSI6ImNqZHdnbTBzYTQ3bXUyeG80ZTQ3dWJtNjIifQ.uvSL6xgyBBXQSJ1Yopx9gA");
+    
+    var satellitemap = L.tileLayer("https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v9/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoibGl0dGxlc3Rkb2xsIiwiYSI6ImNqZHdnbTBzYTQ3bXUyeG80ZTQ3dWJtNjIifQ.uvSL6xgyBBXQSJ1Yopx9gA");
+
     // Define a baseMaps object to hold our base layers
     var baseMaps = {
         "Street Map": streetmap,
-        "Dark Map": darkmap
+        "Dark Map": darkmap,
+        "Light map": lightmap,
+        "Satellite": satellitemap
     };
 
     // Create overlay object to hold our overlay layer
     var overlayMaps = {
-        Earthquakes: earthquakes
+        Earthquakes: earthquakes,
+        Plates: plates
     };
 
-    // Create our map, giving it the streetmap and earthquakes layers to display on load
+    // Create our map, giving it the darkmap, earthquakes, and plates layers to display on load
     var myMap = L.map("map", {
         center: [37.09, -95.71],
         zoom: 5,
-        layers: [darkmap, earthquakes]
+        layers: [darkmap, earthquakes, plates]
     });
 
     var legend = L.control({position: 'bottomright'});
