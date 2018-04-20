@@ -10,10 +10,16 @@ var color5 = "red";
 var legend = L.control();
 
 d3.json(queryURLquakes, function(data) {
-    createFeatures(data.features);
+    loadPlates(data.features);
 });
 
-function createFeatures(earthquakeData) {
+function loadPlates(earthquakeData) {
+    d3.json(queryURLplates, function(data) {
+        createFeatures(earthquakeData, data.features);
+    });    
+}
+
+function createFeatures(earthquakeData, plateData) {
 
     // Define a function we want to run once for each feature in the features array
     // Give each feature a popup describing the place and time of the earthquake
@@ -52,39 +58,17 @@ function createFeatures(earthquakeData) {
         },  
         onEachFeature: handleFeature
     });
+    
+    var plates = L.geoJSON(plateData, {
+    style: function (feature) {
+        var latlngs = (feature.geometry.coordinates);
+        return L.polyline(latlngs, {color: 'red'});
+        }
+    });
 
     // Sending our earthquakes layer to the createMap function
-    createMap(earthquakes);
+    createMap(earthquakes, plates);
 }
-
-d3.json(queryURLplates, function(data) {
-    var plates = L.geoJSON(data, {
-        style: function (feature) {
-            var latlngs = (feature.geometry.coordinates);
-            return L.polyline(latlngs, {color: 'red'}).addTo(map);
-        }
-    })
-    createMap(plates);
-});
-
-// d3.json(queryURLplates, function(data) {
-//     addPlates(data.features);
-// });
-
-// function addPlates(plateData) {
-
-//     var latlngs = (features.geometry.coordinates);
-//     var polyline = L.polyline(latlngs, {color: 'red'}).addTo(map);
-
-//     var plates = L.geoJSON(plateData, {
-//         style: function (feature, latlngs) {
-//             return L.polyline(latlngs, polyline(feature));
-//         }  
-//     });    
-
-//     // Sending our plates layer to the createMap function
-//     createMap(plates);
-// }
 
 function createMap(earthquakes, plates) {
 
