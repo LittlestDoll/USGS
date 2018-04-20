@@ -91,15 +91,15 @@ function createMap(earthquakes, plates) {
 
     // Create overlay object to hold our overlay layer
     var overlayMaps = {
-        Earthquakes: earthquakes,
-        Plates: plates
+        Plates: plates,
+        Earthquakes: earthquakes
     };
 
     // Create our map, giving it the darkmap, earthquakes, and plates layers to display on load
     var myMap = L.map("map", {
         center: [37.09, -95.71],
         zoom: 5,
-        layers: [darkmap, earthquakes, plates]
+        layers: [darkmap, plates, earthquakes]
     });
 
     var legend = L.control({position: 'bottomright'});
